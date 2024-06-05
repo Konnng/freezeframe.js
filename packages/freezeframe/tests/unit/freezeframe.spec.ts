@@ -1,20 +1,25 @@
+import {describe, expect, jest, test} from '@jest/globals';
+
 import Freezeframe from '../../src/index';
 import { classes, styleId } from '../../src/constants';
 import mockDomApis from '../mocks/dom';
+import { FreezeframeOptions, RequireProps, SelectorOrNodes } from '../../types';
+
+type CallbackType = (ff: Freezeframe) => void | (() => void)
 
 mockDomApis(window);
 
-const testFreezeframeInstance = (imgCount, selector, options, cb = () => {}) => {
-  const ff = new Freezeframe(selector, options);
+const testFreezeframeInstance = (imgCount: number, selector?: SelectorOrNodes | RequireProps<FreezeframeOptions, 'selector'> | null, options?: FreezeframeOptions, cb?: CallbackType) => {
+  const ff = new Freezeframe(selector || '.freezeframe', options);
   const $container = document.getElementsByClassName(classes.CONTAINER);
   const $canvas = document.getElementsByClassName(classes.CANVAS);
   const $image = document.getElementsByClassName(classes.IMAGE);
   expect(ff.$images.length).toBe(imgCount);
-  expect(ff.items.length).toBe(imgCount);
+  expect(ff.items.size).toBe(imgCount);
   expect($container.length).toBe(imgCount);
   expect($canvas.length).toBe(imgCount);
   expect($image.length).toBe(imgCount);
-  cb(ff);
+  cb && cb(ff);
 };
 
 describe('default selector', () => {
@@ -172,7 +177,7 @@ describe('options', () => {
       selector: '.foo',
       trigger: false,
       overlay: true
-    }, undefined, (ff) => {
+    }, undefined, (ff: Freezeframe) => {
       ff.start();
       const $active = document.getElementsByClassName(classes.ACTIVE);
       expect($active.length).toBe(1);
@@ -189,7 +194,7 @@ describe('event listeners', () => {
         <img src="foo.gif">
       </div>
     `;
-    testFreezeframeInstance(1, '.foo', undefined, (ff) => {
+    testFreezeframeInstance(1, '.foo', undefined, (ff: Freezeframe) => {
       const startCallbackMock = jest.fn();
       const stopCallbackMock = jest.fn();
       const toggleCallbackMock = jest.fn();

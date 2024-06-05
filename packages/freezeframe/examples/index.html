@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>freezeframe.js</title>
 
-<script src="./freezeframe.min.js"></script>
+<script type="module" src="../src/browser.ts"></script>
 
 <style type="text/css">
 
@@ -76,11 +76,29 @@ button:active {
 
 <img
   class="freezeframe"
-  src="http://static1.squarespace.com/static/51c748abe4b0c275d0aa86bf/55f96e21e4b0f86680e762dc/56aa551b8b38d446e39e933b/1454003533097/.gif"
+  src="woman.gif"
 />
 
 <script>
+  addEventListener('DOMContentLoaded', () => {
 new Freezeframe();
+  });
+</script>
+
+<!-- Example 2 -->
+
+<p>use a different cover image,<br />animate on hover.</p>
+
+<img
+  class="freezeframe-with-cover"
+  data-poster="woman.png"
+  src="woman.gif"
+/>
+
+<script>
+  addEventListener('DOMContentLoaded', () => {
+    new Freezeframe('.freezeframe-with-cover');
+  });
 </script>
 
 <!-- Example 2 -->
@@ -93,10 +111,12 @@ new Freezeframe();
 />
 
 <script>
+  addEventListener('DOMContentLoaded', () => {
 new Freezeframe({
   selector: '.my-class-2',
   trigger: 'click'
 });
+  });
 </script>
 
 <!-- Example 3 -->
@@ -112,20 +132,23 @@ new Freezeframe({
 />
 
 <script>
-const manual = new Freezeframe('.my-class-3', {
-  trigger: false
-});
+  addEventListener('DOMContentLoaded', () => {
 
-document
-  .querySelector('.start')
-  .addEventListener('click', () => {
-    manual.start();
-  });
+    const manual = new Freezeframe('.my-class-3', {
+      trigger: false
+    });
 
-document
-  .querySelector('.stop')
-  .addEventListener('click', () => {
-    manual.stop();
+    document
+      .querySelector('.start')
+      .addEventListener('click', () => {
+        manual.start();
+      });
+
+    document
+      .querySelector('.stop')
+      .addEventListener('click', () => {
+        manual.stop();
+      });
   });
 </script>
 
@@ -168,9 +191,11 @@ document
 </div>
 
 <script>
+  addEventListener('DOMContentLoaded', () => {
 new Freezeframe('.overlay', {
   overlay: true
 });
+  });
 </script>
 
 <!-- Example 5 -->
@@ -185,16 +210,19 @@ new Freezeframe('.overlay', {
 />
 
 <script>
-const destroyable = new Freezeframe('.my-class-5', {
-  overlay: true
-});
+  addEventListener('DOMContentLoaded', () => {
+    const destroyable = new Freezeframe('.my-class-5', {
+      overlay: true
+    });
 
-document
-  .querySelector('.destroy')
-  .addEventListener('click', () => {
-    console.log('click')
-    destroyable.destroy();
-  });
+    document
+      .querySelector('.destroy')
+      .addEventListener('click', () => {
+        console.log('click')
+        destroyable.destroy();
+      });
+  })
+
 </script>
 
 

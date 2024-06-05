@@ -27,7 +27,7 @@ import {
 class Freezeframe {
   options: FreezeframeOptions;
 
-  items: Freeze[] = [];
+  items = new Map<object, Freeze>();
 
   $images: HTMLImageElement[] = [];
 
@@ -88,14 +88,15 @@ class Freezeframe {
 
   private _load($images: HTMLImageElement[]): void {
     imagesLoaded($images)
-      .on('progress', (instance, { img }) => {
+      .on('progress', (_, { img }) => {
         this._setup(img);
       });
   }
 
   private async _setup($image: HTMLImageElement): Promise<void> {
     const freeze = this._wrap($image);
-    this.items.push(freeze);
+    // this.items.push(freeze);
+    this.items.set($image, freeze);
     await this._process(freeze);
     this._attach(freeze);
   }
@@ -124,19 +125,34 @@ class Freezeframe {
   private _process(freeze: Freeze): Promise<Freeze> {
     return new Promise((resolve) => {
       const { $canvas, $image, $container } = freeze;
-      const { width, height } = $image.getClientRects()[0];
-      const clientWidth = Math.ceil(width);
-      const clientHeight = Math.ceil(height);
+      const scale = devicePixelRatio;
 
-      $canvas.style.width =  `${width}px`;
-      $canvas.style.height = `${height}px`;
+      const { width, height } = $image.getClientRects()[0];
+      const clientWidth = Math.ceil(width * scale);
+      const clientHeight = Math.ceil(height * scale);
+
+      const $frame = new Image();
+      const context = $canvas.getContext('2d');
+
+      context.clearRect(0, 0, clientWidth, clientHeight);
+
+      $frame.onerror = function load() {
+        if (this.src !== $image.src) {
+          this.src = $image.src;
+        }
+      };
+      $frame.onload = () => {
+        context.drawImage($frame, 0, 0, clientWidth, clientHeight);
+        $canvas.classList.add(classes.CANVAS_READY);
+      };
+      $frame.setAttribute('width', width.toString());
+      $frame.setAttribute('height', height.toString());
+      $frame.src = $image.dataset.poster || $image.src;
+
+      $canvas.style.setProperty('width', `${width}px`);
+      $canvas.style.setProperty('height', `${height}px`);
       $canvas.setAttribute('width', clientWidth.toString());
       $canvas.setAttribute('height', clientHeight.toString());
-
-      const context = $canvas.getContext('2d');
-      context.drawImage($image, 0, 0, clientWidth, clientHeight);
-
-      $canvas.classList.add(classes.CANVAS_READY);
 
       $canvas.addEventListener('transitionend', () => {
         this._ready($container);
@@ -254,8 +270,8 @@ class Freezeframe {
     this.items.forEach((freeze) => {
       this._toggleOn(freeze);
     });
-    this._emit(FreezeframeEventTypes.START, this.items, true);
-    this._emit(FreezeframeEventTypes.TOGGLE, this.items, true);
+    this._emit(FreezeframeEventTypes.START, [...this.items.values()], true);
+    this._emit(FreezeframeEventTypes.TOGGLE, [...this.items.values()], true);
     return this;
   }
 
@@ -263,20 +279,24 @@ class Freezeframe {
     this.items.forEach((freeze) => {
       this._toggleOff(freeze);
     });
-    this._emit(FreezeframeEventTypes.STOP, this.items, false);
-    this._emit(FreezeframeEventTypes.TOGGLE, this.items, false);
+    this._emit(FreezeframeEventTypes.STOP, [...this.items.values()], false);
+    this._emit(FreezeframeEventTypes.TOGGLE, [...this.items.values()], false);
     return this;
+  }
+
+  get(index: number): Freeze | undefined {
+    return [...this.items.values()][index];
   }
 
   toggle() {
     this.items.forEach((freeze) => {
       const isPlaying = this._toggle(freeze);
       if (isPlaying) {
-        this._emit(FreezeframeEventTypes.START, this.items, false);
+        this._emit(FreezeframeEventTypes.START, [...this.items.values()], false);
       } else {
-        this._emit(FreezeframeEventTypes.STOP, this.items, false);
+        this._emit(FreezeframeEventTypes.STOP, [...this.items.values()], false);
       }
-      this._emit(FreezeframeEventTypes.TOGGLE, this.items, isPlaying);
+      this._emit(FreezeframeEventTypes.TOGGLE, [...this.items.values()], isPlaying);
     });
     return this;
   }
@@ -284,6 +304,16 @@ class Freezeframe {
   on(event: string, cb: Function) {
     this._eventListeners[event].push(cb);
     return this;
+  }
+
+  reset($image?: HTMLImageElement): void {
+    if ($image) {
+      const freeze = this.items.get($image);
+
+      this._process(freeze);
+    } else {
+      this.items.forEach((freeze) => this._process(freeze));
+    }
   }
 
   destroy(): void {

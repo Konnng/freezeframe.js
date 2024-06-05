@@ -1,6 +1,6 @@
 import { html } from 'common-tags';
 import { classes, styleId } from './constants';
-import styles from './scss/styles.scss';
+import styles from './scss/styles.scss?inline';
 
 export const stylesheet = () => (
   html(`
